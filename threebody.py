@@ -12,14 +12,14 @@ sliders = []
 
 #config
 RADIUS=50
-MASS=1000
+MASS=200
 SUN_TRAIL=True
 VEL_COLOR=color.blue
 FORCE_COLOR=color.red
 INIT_POS_MIN=-1000
 INIT_POS_MAX=1000
-INIT_VEL_MIN=-5
-INIT_VEL_MAX=5
+INIT_VEL_MIN=-1
+INIT_VEL_MAX=1
 GRAV_ARROWS_ON=True
 LABELS_ON=True
 VEL_ARROWS_ON=True
@@ -54,7 +54,7 @@ class Celestial:
         self.poslabel.text = str(value).strip("<>")
         for c in celestials:
             calc_gravity(c, celestials)
-        self.wt.text=f"({str(value).strip("<>")}) {self.vel}"
+        self.wt.text=f"({str(value).strip('<>')}) {self.vel}"
 
     @property
     def vel(self):
@@ -64,7 +64,7 @@ class Celestial:
     def vel(self, value):
         self.velocity = value
         self.velarrow.axis = value
-        self.wt.text=f"({str(self.pos).strip("<>")}) {value}"
+        self.wt.text=f"({str(self.pos).strip('<>')}) {value}"
 
     def show_velarrow(self):
         self.velarrow.visible=True
@@ -116,11 +116,12 @@ def do_slider(evt):
         setattr(obj.sphere.pos, coord, evt.value)
         setattr(obj.velarrow.pos, coord, evt.value)
         obj.poslabel.text = str(obj.sphere.pos).strip("<>")
-        obj.wt.text=f"({str(obj.pos).strip("<>")}) {obj.vel}"
+        obj.wt.text=f"({str(obj.pos).strip('<>')}) {obj.vel}"
     elif pos_or_vel == "vel":
         setattr(obj.velocity, coord, evt.value)
         setattr(obj.velarrow.axis, coord, evt.value)
-        obj.wt.text=f"({str(obj.pos).strip("<>")}) {obj.vel}"
+        obj.wt.text=f"({str(obj.pos).strip('<>')}) {obj.vel}"
+    obj.sphere.clear_trail()
     
 def randomize(evt):
     _, i = evt.id.split("-")
@@ -129,9 +130,9 @@ def randomize(evt):
     y = random.randrange(INIT_POS_MIN, INIT_POS_MAX)
     z = random.randrange(INIT_POS_MIN, INIT_POS_MAX)
     obj.pos = vec(x,y,z)    
-    x = random.randrange(INIT_VEL_MIN, INIT_VEL_MAX)
-    y = random.randrange(INIT_VEL_MIN, INIT_VEL_MAX)
-    z = random.randrange(INIT_VEL_MIN, INIT_VEL_MAX)
+    x = random.randrange(INIT_VEL_MIN*100, INIT_VEL_MAX*100)/100
+    y = random.randrange(INIT_VEL_MIN*100, INIT_VEL_MAX*100)/100
+    z = random.randrange(INIT_VEL_MIN*100, INIT_VEL_MAX*100)/100
     obj.vel = vec(x,y,z)    
     obj.sphere.clear_trail()
 
@@ -205,7 +206,7 @@ random.seed(1980)
 for i in range(N):
     pos = vec(random.randrange(INIT_POS_MIN,INIT_POS_MAX),random.randrange(INIT_POS_MIN,INIT_POS_MAX),random.randrange(INIT_POS_MIN,INIT_POS_MAX))
     sph = sphere(pos=pos, radius=RADIUS, color=vec(1, 1-0.2*i, 0), opacity=0.7,
-                 make_trail=SUN_TRAIL, interval=10, retain=1000) 
+                 make_trail=SUN_TRAIL, interval=10, retain=-1) 
     lbl = label(pos = sph.pos, text=str(sph.pos).strip("<>"), opacity=0, border=0, box=0)
     velarr = arrow(pos=sph.pos, axis=vec(0,0,0), color=VEL_COLOR)
     celestial = Celestial(MASS, sph, velarr, poslabel=lbl, name=f"sun{i+1}")
@@ -228,7 +229,7 @@ for i in range(N):
     scene.append_to_caption("z")
     slidervz = slider(bind=do_slider, max=10, min = -10, step=1, value=celestial.velocity.z, 
                      id=f'{sph.idx}-pos-z', length=SLIDER_LEN)
-    celestial.wt = wtext(text=f"({celestial.pos.__str__().strip("<>")}) {celestial.vel}")
+    celestial.wt = wtext(text=f"({celestial.pos.__str__().strip('<>')}) {celestial.vel}")
     randomizeButton = button(bind=randomize, text="random", id=f"randbutton-{i}")
     scene.append_to_caption('\n\n')
     celestials.append(celestial)
@@ -238,7 +239,13 @@ goButton = button(bind=toggle_simulation, text="GO", background=color.green)
 gravToggleButton = button(bind=toggle_grav, text="Gravity arrows are ON", background=color.yellow)
 velToggleButton = button(bind=toggle_vel, text="Velocity arrows are ON", background=color.yellow)
 lablToggleButton = button(bind=toggle_labels, text="Labels are ON", background=color.yellow)
+
 #timeSlider = slider(bind=
+
+celestials[0].pos = vec(-500, 0, 0)
+celestials[1].pos = vec(700, 0, 0)
+celestials[2].pos = vec(200, 1280, 0)
+
 
 #evt = scene.waitfor('draw_complete')
 
@@ -246,7 +253,7 @@ lablToggleButton = button(bind=toggle_labels, text="Labels are ON", background=c
 
 while True:
     rate(50)
-    dt = 0.5
+    dt = 1.5
     do_input()
     for c in celestials:
         calc_gravity(c, celestials)
